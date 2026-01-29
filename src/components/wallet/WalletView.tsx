@@ -16,11 +16,45 @@ import { ArrowUpRight, Copy, FilePlusCorner } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+
+type Currency = {
+  name: string;
+  coin_index: number | null;
+  iconUrl: string;
+  color: string;
+};
+
+const CURRENCIES: Currency[] = [
+  {
+    name: "Solana",
+    coin_index: 501,
+    iconUrl: "https://cryptologos.cc/logos/solana-sol-logo.png",
+    color: "#9945FF",
+  },
+  {
+    name: "Ethereum",
+    coin_index: 60,
+    iconUrl: "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    color: "#627EEA",
+  },
+];
 
 export const WalletView = () => {
   const [mnemonic, setMnemonic] = useState("");
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
+    CURRENCIES[0],
+  );
 
   // useEffect(() => {
   //   const handleGenerateWallet = async () => {
@@ -56,7 +90,7 @@ export const WalletView = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mnemonic: newPhrase,
-          coin_index: 501, // solana only
+          coin_index: selectedCurrency.coin_index,
           index: nextIndex,
         }),
       });
@@ -112,14 +146,46 @@ export const WalletView = () => {
               className="resize-none p-2"
               disabled={mnemonic.length > 0}
             />
-            <Button
-              type="submit"
-              className="w-fit hover:bg-accent cursor-pointer"
-              variant={"outline"}
-              onClick={handleGenerateWallet}
-            >
-              Generate Wallet
-            </Button>
+            <div className="flex items-center gap-4">
+              <Select
+                value={selectedCurrency.coin_index?.toString()!}
+                onValueChange={(value) => {
+                  const currency = CURRENCIES.find(
+                    (c) => c.coin_index!.toString() === value,
+                  );
+
+                  if (currency) {
+                    setSelectedCurrency(currency);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full max-w-48">
+                  <SelectValue placeholder="Select a currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Currencies</SelectLabel>
+                    {CURRENCIES.map((currency) => (
+                      <SelectItem
+                        value={currency.coin_index?.toString()!}
+                        key={currency.coin_index}
+                      >
+                        <img src={currency.iconUrl} width={20} height={20} />
+                        {currency.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Button
+                type="submit"
+                className="w-fit hover:bg-accent cursor-pointer"
+                variant={"outline"}
+                onClick={handleGenerateWallet}
+              >
+                Generate Wallet
+              </Button>
+            </div>
           </div>
           <Separator />
           <div className="p-2 flex flex-col gap-4 flex-wrap">
@@ -128,13 +194,14 @@ export const WalletView = () => {
             </h1>
             <div className="py-2 flex gap-2 flex-wrap">
               {mnemonic
-                ? mnemonic
-                    .split(" ")
-                    .map((s) => (
-                      <span className="p-2 rounded border text-xl hover:bg-accent cursor-pointer">
-                        {s}
-                      </span>
-                    ))
+                ? mnemonic.split(" ").map((s, index) => (
+                    <span
+                      className="p-2 rounded border text-xl hover:bg-accent cursor-pointer"
+                      key={index}
+                    >
+                      {s}
+                    </span>
+                  ))
                 : "click on generate wallet"}
             </div>
             <Button
@@ -170,8 +237,29 @@ export const WalletView = () => {
                 {wallets.map((wallet, index) => (
                   <Card className="max-w-sm" key={wallet.path}>
                     <CardHeader>
-                      <CardTitle>Wallet {index + 1}</CardTitle>
-                      <CardDescription>solana wallet</CardDescription>
+                      <CardTitle>
+                        <div className="flex gap-4 items-center">
+                          {wallet.path.includes("501") ? (
+                            <img
+                              src={CURRENCIES[0].iconUrl}
+                              width={20}
+                              height={20}
+                            />
+                          ) : (
+                            <img
+                              src={CURRENCIES[1].iconUrl}
+                              width={20}
+                              height={20}
+                            />
+                          )}
+                          Wallet {index + 1}
+                        </div>
+                      </CardTitle>
+                      <CardDescription className="capitalize text-sm">
+                        {wallet.path.includes("501")
+                          ? "solana wallet"
+                          : "ethereum wallet"}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="max-w-lg flex flex-col justify-between gap-4">
@@ -213,12 +301,26 @@ export const WalletView = () => {
       <CardFooter className="flex-col gap-2">
         <div className="flex gap-2 justify-center items-center">
           Crafted by
-          <div className="border p-2 flex gap-2 items-center rounded-lg">
+          {/* <div
+            className="border p-2 flex gap-2 items-center rounded-lg"
+            onClick={() => {
+              location.replace("https://github.com/harpalll");
+            }}
+          >
             <a href="https://github.com/harpalll" className="underline">
               harpalll
             </a>
             <ArrowUpRight />
-          </div>
+          </div> */}
+          <a
+            href="https://github.com/harpalll"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border p-2 flex gap-2 items-center rounded-lg hover:bg-muted transition"
+          >
+            <span className="underline">harpalll</span>
+            <ArrowUpRight />
+          </a>
         </div>
       </CardFooter>
     </Card>
