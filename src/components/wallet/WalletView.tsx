@@ -7,27 +7,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import type { Wallet } from "@/types/index";
-import { generateWallet, mnemonic } from "@/utils/wallet";
 import { generateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import {
-  ArrowBigUpIcon,
-  ArrowUpRight,
-  Copy,
-  FilePlusCorner,
-} from "lucide-react";
+import { ArrowUpRight, Copy, FilePlusCorner } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
 
 export const WalletView = () => {
   const [mnemonic, setMnemonic] = useState("");
-  const [walletIndex, setWalletIndex] = useState<number>(0);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -74,9 +65,6 @@ export const WalletView = () => {
       console.log(data);
 
       if (!response.ok) throw new Error(data.error || "Unknown error");
-
-      console.log(`set index to ${walletIndex}`);
-      // const wallet = await generateWallet(walletIndex!);
 
       toast.success("Wallet generated successfully!");
       setWallets((prev) => [...prev, data]);
@@ -163,7 +151,9 @@ export const WalletView = () => {
       <Separator />
       <CardContent>
         {loading ? (
-          <Spinner />
+          <div className="flex items-center justify-center">
+            <Spinner />
+          </div>
         ) : (
           <div>
             {wallets.length === 0 ? (
