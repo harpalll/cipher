@@ -13,7 +13,7 @@ import type { Wallet } from "@/types/index";
 import { generateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { ArrowUpRight, Copy, FilePlusCorner } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
 import {
@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { getData, removeData, storeData } from "@/utils/storage";
 
 type Currency = {
   name: string;
@@ -56,24 +57,16 @@ export const WalletView = () => {
     CURRENCIES[0],
   );
 
-  // useEffect(() => {
-  //   const handleGenerateWallet = async () => {
-  //     setLoading(true);
-  //     try {
-  //       // await new Promise((res) => setTimeout(() => res("hello"), 5000));
-  //       setWalletIndex((walletIndex) => walletIndex! + 1);
-  //       console.log(`set index to ${walletIndex}`);
-  //       const wallet = await generateWallet(walletIndex!);
-  //       toast.success("Wallet generated successfully!");
-  //       setWallet(wallet);
-  //     } catch (error) {
-  //       toast.error("error generating wallet, Please try again.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   handleGenerateWallet();
-  // }, []);
+  useEffect(() => {
+    const localStorageRetrival = async () => {
+      const walletsLs = await getData("wallets", []);
+      const menmonicLs = await getData("mnemonic", "");
+
+      if (walletsLs) setWallets(walletsLs);
+      if (menmonicLs) setMnemonic(menmonicLs);
+    };
+    localStorageRetrival();
+  }, []);
 
   const handleGenerateWallet = async () => {
     let newPhrase = mnemonic;
@@ -99,6 +92,9 @@ export const WalletView = () => {
       console.log(data);
 
       if (!response.ok) throw new Error(data.error || "Unknown error");
+
+      await storeData("mnemonic", newPhrase);
+      await storeData("wallets", [...wallets, data]);
 
       toast.success("Wallet generated successfully!");
       setWallets((prev) => [...prev, data]);
@@ -130,6 +126,14 @@ export const WalletView = () => {
   const handleCopyPrivateKey = (content: string) => {
     navigator.clipboard.writeText(content);
     toast.success("Copied to clipboard!");
+  };
+
+  const handleClearAll = async () => {
+    setWallets([]);
+    setMnemonic("");
+
+    await removeData("wallets");
+    await removeData("mnemonic");
   };
 
   return (
@@ -184,6 +188,15 @@ export const WalletView = () => {
                 onClick={handleGenerateWallet}
               >
                 Generate Wallet
+              </Button>
+
+              <Button
+                type="button"
+                className="w-fit cursor-pointer hover:bg-destructive/80 justify-self-end"
+                variant={"destructive"}
+                onClick={handleClearAll}
+              >
+                Clear Wallets
               </Button>
             </div>
           </div>
